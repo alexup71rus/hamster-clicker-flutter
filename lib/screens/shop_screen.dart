@@ -28,11 +28,10 @@ class ShopScreen extends StatelessWidget {
               ),
             ),
             actions: [
-              // Кнопка фильтров с отступом справа
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: Builder(
-                  builder: (context) {
+                  builder: (buttonContext) {
                     return IconButton(
                       icon: Icon(
                         Icons.filter_list,
@@ -40,67 +39,86 @@ class ShopScreen extends StatelessWidget {
                       ),
                       onPressed: () async {
                         final RenderBox button =
-                            context.findRenderObject() as RenderBox;
+                            buttonContext.findRenderObject() as RenderBox;
                         final RenderBox overlay =
-                            Overlay.of(context).context.findRenderObject()
+                            Overlay.of(buttonContext).context.findRenderObject()
                                 as RenderBox;
                         final Offset position = button.localToGlobal(
                           Offset.zero,
                           ancestor: overlay,
                         );
 
-                        await showDialog(
-                          context: context,
+                        await showGeneralDialog(
+                          barrierDismissible: true,
+                          barrierLabel: 'filters',
                           barrierColor: Colors.transparent,
-                          builder: (context) {
+                          transitionDuration: Duration.zero,
+                          context: buttonContext,
+                          pageBuilder: (dialogContext, _, __) {
+                            final size = overlay.size;
+                            final double right =
+                                size.width -
+                                position.dx -
+                                button.size.width -
+                                8;
+                            final double top =
+                                position.dy + button.size.height - 4;
+
                             return Stack(
                               children: [
                                 Positioned(
-                                  right:
-                                      MediaQuery.of(context).size.width -
-                                      position.dx -
-                                      button.size.width,
-                                  top: position.dy + button.size.height,
-                                  child: ListenableBuilder(
-                                    listenable: gameState,
-                                    builder: (context, child) => Material(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.surface,
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          _buildFilterMenuItem(
-                                            context,
-                                            label: 'Только купленные',
-                                            icon: gameState.showOnlyPurchased
-                                                ? Icons.check_box
-                                                : Icons.check_box_outline_blank,
-                                            onTap: () {
-                                              gameState.togglePurchasedFilter();
-                                            },
-                                          ),
-                                          _buildFilterMenuItem(
-                                            context,
-                                            label: 'Только доступные',
-                                            icon: gameState.showOnlyAffordable
-                                                ? Icons.check_box
-                                                : Icons.check_box_outline_blank,
-                                            onTap: () {
-                                              gameState
-                                                  .toggleAffordableFilter();
-                                            },
-                                          ),
-                                          _buildFilterMenuItem(
-                                            context,
-                                            label: 'Сбросить фильтры',
-                                            icon: Icons.clear,
-                                            onTap: () {
-                                              gameState.clearFilters();
-                                            },
-                                          ),
-                                        ],
+                                  right: right < 8 ? 8 : right,
+                                  top: top,
+                                  child: Material(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(8),
+                                    elevation: 8,
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 280,
+                                        minWidth: 200,
+                                      ),
+                                      child: ListenableBuilder(
+                                        listenable: gameState,
+                                        builder: (context, child) => Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            _buildFilterMenuItem(
+                                              context,
+                                              label: 'Только купленные',
+                                              icon: gameState.showOnlyPurchased
+                                                  ? Icons.check_box
+                                                  : Icons
+                                                        .check_box_outline_blank,
+                                              onTap: () {
+                                                gameState
+                                                    .togglePurchasedFilter();
+                                              },
+                                            ),
+                                            _buildFilterMenuItem(
+                                              context,
+                                              label: 'Только доступные',
+                                              icon: gameState.showOnlyAffordable
+                                                  ? Icons.check_box
+                                                  : Icons
+                                                        .check_box_outline_blank,
+                                              onTap: () {
+                                                gameState
+                                                    .toggleAffordableFilter();
+                                              },
+                                            ),
+                                            _buildFilterMenuItem(
+                                              context,
+                                              label: 'Сбросить фильтры',
+                                              icon: Icons.clear,
+                                              onTap: () {
+                                                gameState.clearFilters();
+                                              },
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -118,7 +136,6 @@ class ShopScreen extends StatelessWidget {
           ),
           body: Column(
             children: [
-              // Индикаторы активных фильтров
               if (gameState.showOnlyPurchased || gameState.showOnlyAffordable)
                 Container(
                   width: double.infinity,
@@ -143,7 +160,6 @@ class ShopScreen extends StatelessWidget {
                   ),
                 ),
 
-              // Список улучшений
               Expanded(
                 child: filteredUpgrades.isEmpty
                     ? _buildEmptyState(context)
@@ -240,7 +256,7 @@ class ShopScreen extends StatelessWidget {
               : isAvailable
               ? colorScheme.primary
               : colorScheme.onSurface.withOpacity(0.3),
-          width: upgrade.isPurchased ? 2 : 1,
+          width: 1.5,
         ),
         boxShadow: isAvailable
             ? [
@@ -262,7 +278,6 @@ class ShopScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Иконка улучшения
                 Container(
                   width: 50,
                   height: 50,
@@ -278,13 +293,10 @@ class ShopScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-
-                // Информация об улучшении
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Название и статус
                       Row(
                         children: [
                           Expanded(
@@ -309,8 +321,6 @@ class ShopScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-
-                      // Описание
                       Text(
                         upgrade.description,
                         style: TextStyle(
@@ -319,8 +329,6 @@ class ShopScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-
-                      // Эффект и цена
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -395,7 +403,6 @@ class ShopScreen extends StatelessWidget {
     final success = gameState.purchaseUpgrade(upgrade.id);
 
     if (success) {
-      // Показываем уведомление об успешной покупке
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -446,11 +453,11 @@ class ShopScreen extends StatelessWidget {
   Color _getTypeColor(UpgradeType type) {
     switch (type) {
       case UpgradeType.clickPower:
-        return const Color(0xFFE36414); // глубокий оранжевый
+        return const Color(0xFFE36414);
       case UpgradeType.passive:
-        return const Color(0xFFD97706); // тёмный янтарный
+        return const Color(0xFFD97706);
       case UpgradeType.multiplier:
-        return const Color(0xFFB3475D); // тёплый бордово-терракотовый
+        return const Color(0xFFB3475D);
     }
   }
 
@@ -471,7 +478,10 @@ class ShopScreen extends StatelessWidget {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        onTap();
+        Navigator.of(context).pop();
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(

@@ -70,65 +70,89 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: Container(color: Colors.black.withOpacity(0.3)),
               ),
               SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Общие очки
-                      _buildStatCard(
-                        icon: '💎',
-                        label: 'Очки',
-                        value: _formatNumber(widget.gameState.points),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isSmallScreen = constraints.maxWidth < 600;
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 8.0 : 16.0,
+                        vertical: 8.0,
                       ),
-                      // Очки в секунду
-                      _buildStatCard(
-                        icon: '⚡',
-                        label: 'в сек',
-                        value: widget.gameState.pointsPerSecond.toStringAsFixed(
-                          1,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Общие очки
+                          Flexible(
+                            child: _buildStatCard(
+                              icon: '💎',
+                              label: 'Очки',
+                              value: _formatNumber(widget.gameState.points),
+                              isSmallScreen: isSmallScreen,
+                            ),
+                          ),
+                          SizedBox(width: isSmallScreen ? 4 : 8),
+                          // Очки в секунду
+                          Flexible(
+                            child: _buildStatCard(
+                              icon: '⚡',
+                              label: 'в сек',
+                              value: widget.gameState.pointsPerSecond
+                                  .toStringAsFixed(1),
+                              isSmallScreen: isSmallScreen,
+                            ),
+                          ),
+                          SizedBox(width: isSmallScreen ? 4 : 8),
+                          // Очки за клик
+                          Flexible(
+                            child: _buildStatCard(
+                              icon: '👆',
+                              label: 'за клик',
+                              value: widget.gameState.pointsPerClick.toString(),
+                              isSmallScreen: isSmallScreen,
+                            ),
+                          ),
+                        ],
                       ),
-                      // Очки за клик
-                      _buildStatCard(
-                        icon: '👆',
-                        label: 'за клик',
-                        value: widget.gameState.pointsPerClick.toString(),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
               Column(
                 children: [
+                  const SizedBox(height: 140),
                   Padding(
-                    padding: const EdgeInsets.all(80.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: _buildProgressToNextUpgrade(),
                   ),
+                  const SizedBox(height: 20),
                   Expanded(
-                    flex: 3,
-                    child: Center(
-                      child: ScaleTransition(
-                        scale: _clickAnimation,
-                        child: GestureDetector(
-                          onTap: _onButtonClick,
-                          child: ClipOval(
-                            clipBehavior: Clip.antiAlias,
-                            child: SizedBox(
-                              width: 350,
-                              height: 350,
-                              child: Image.asset(
-                                'assets/images/main_screen/hamster_1.png',
-                                fit: BoxFit.cover,
-                                filterQuality: FilterQuality.high,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Адаптивный размер кнопки в зависимости от размера экрана
+                        final maxSize = constraints.maxWidth * 0.8;
+                        final buttonSize = maxSize.clamp(200.0, 350.0);
+
+                        return Center(
+                          child: ScaleTransition(
+                            scale: _clickAnimation,
+                            child: GestureDetector(
+                              onTap: _onButtonClick,
+                              child: ClipOval(
+                                clipBehavior: Clip.antiAlias,
+                                child: SizedBox(
+                                  width: buttonSize,
+                                  height: buttonSize,
+                                  child: Image.asset(
+                                    'assets/images/main_screen/hamster_1.png',
+                                    fit: BoxFit.cover,
+                                    filterQuality: FilterQuality.high,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -144,13 +168,17 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     required String icon,
     required String label,
     required String value,
+    bool isSmallScreen = false,
   }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 8 : 12,
+            vertical: isSmallScreen ? 6 : 8,
+          ),
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.2),
             borderRadius: BorderRadius.circular(12),
@@ -161,22 +189,32 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(icon, style: const TextStyle(fontSize: 16)),
-                  const SizedBox(width: 4),
                   Text(
-                    label,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    icon,
+                    style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
+                  ),
+                  SizedBox(width: isSmallScreen ? 2 : 4),
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: isSmallScreen ? 10 : 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: isSmallScreen ? 12 : 14,
                   fontWeight: FontWeight.bold,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
